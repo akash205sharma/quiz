@@ -1,14 +1,16 @@
 const Quiz = require('../models/Quiz');
 const Submission = require('../models/Submission');
+const User = require('../models/User');
+const { sendQuizPublishedEmail } = require('../utils/emailService');
 
 // Create Quiz (faculty only)
 exports.createQuiz = async (req, res) => {
   try {
     const { title, description, questions } = req.body;
     if (!title) return res.status(400).json({ message: 'Title required' });
-    const quiz = new Quiz({ 
-      title, 
-      description, 
+    const quiz = new Quiz({
+      title,
+      description,
       facultyId: req.user.id,
       questions: questions || [] // Accept questions array if provided
     });
@@ -56,8 +58,17 @@ exports.publishQuiz = async (req, res) => {
     if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
     if (req.user.role !== 'faculty' || quiz.facultyId.toString() !== req.user.id)
       return res.status(403).json({ message: 'Not authorized' });
+
+    const previousStatus = quiz.status;
     quiz.status = quiz.status === 'published' ? 'draft' : 'published';
     await quiz.save();
+
+    // Send email if status changed to published
+    if (previousStatus !== 'published' && quiz.status === 'published') {
+      const students = await User.find({ role: 'student' });
+      sendQuizPublishedEmail(students, quiz);
+    }
+
     res.json({ status: quiz.status });
   } catch (err) {
     res.status(500).json({ message: 'Publish toggle failed', error: err.message });
@@ -188,11 +199,11 @@ exports.quizAnalytics = async (req, res) => {
     if (!quiz || (req.user.role !== 'faculty' || quiz.facultyId.toString() !== req.user.id))
       return res.status(403).json({ message: 'Not authorized' });
     const subs = await Submission.find({ quizId: quiz._id });
-    if (!subs || subs.length === 0) return res.json({info: 'No submissions yet'});
+    if (!subs || subs.length === 0) return res.json({ info: 'No submissions yet' });
     const scores = subs.map(s => s.score);
     const highest = Math.max(...scores);
     const lowest = Math.min(...scores);
-    const avg = (scores.reduce((sum,x) => sum+x, 0) / scores.length).toFixed(1);
+    const avg = (scores.reduce((sum, x) => sum + x, 0) / scores.length).toFixed(1);
     // Question-wise correct %
     const questionWise = quiz.questions.map((q, i) => {
       const correct = subs.filter(s => s.answers[i] && s.answers[i].selectedOption === q.correctAnswer).length;
@@ -216,7 +227,7 @@ exports.getMyResult = async (req, res) => {
     if (!quiz || quiz.status !== 'published') return res.status(404).json({ message: 'Quiz not found' });
     const submission = await Submission.findOne({ quizId: quiz._id, studentId: req.user.id }).sort({ submittedAt: -1 });
     if (!submission) return res.json({ message: 'No submission found', score: null });
-    
+
     // Return detailed result with questions, correct answers, and student answers
     const detailedQuestions = quiz.questions.map((q, index) => {
       const studentAnswer = submission.answers.find(a => a.questionIndex === index);
@@ -228,10 +239,10 @@ exports.getMyResult = async (req, res) => {
         isCorrect: studentAnswer ? studentAnswer.selectedOption === q.correctAnswer : false
       };
     });
-    
-    res.json({ 
-      score: submission.score, 
-      submittedAt: submission.submittedAt, 
+
+    res.json({
+      score: submission.score,
+      submittedAt: submission.submittedAt,
       totalQuestions: quiz.questions.length,
       questions: detailedQuestions,
       quizTitle: quiz.title
