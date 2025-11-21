@@ -7,14 +7,15 @@ A full-stack web application for managing and taking quizzes. This platform allo
 ### 🎓 Faculty
 - **Authentication**: Secure login and registration.
 - **Quiz Management**: Create, update, delete, and list quizzes.
+- **Targeted Quizzes**: Create quizzes specifically for students of a certain Year (1-4) and Branch (CSE, MNC, MAE, ECE).
 - **Question Management**: Add, edit, and remove questions from quizzes.
 - **Publishing**: Publish/Unpublish quizzes.
-- **Email Alerts**: Automatically sends email notifications to all students when a quiz is published.
+- **Email Alerts**: Automatically sends email notifications to **targeted** students when a quiz is published.
 - **Analytics**: View submission statistics, average scores, and question-wise performance.
 
 ### 🧑‍🎓 Student
-- **Authentication**: Secure login and registration.
-- **Dashboard**: View available published quizzes.
+- **Authentication**: Secure login and registration with Year and Branch details.
+- **Dashboard**: View available published quizzes that match your Year and Branch.
 - **Take Quiz**: Interactive quiz interface.
 - **Results**: Instant scoring and detailed result view (correct/incorrect answers).
 
@@ -86,15 +87,18 @@ npm start
 
 ## 🏃‍♂️ Usage
 
-1.  **Register**: Create a new account. Select 'Faculty' or 'Student' role.
+1.  **Register**: Create a new account.
+    - **Faculty**: Select 'Faculty' role.
+    - **Student**: Select 'Student' role and provide your **Year** and **Branch**.
 2.  **Faculty Flow**:
     - Log in as Faculty.
     - Click "Create Quiz" to start a new quiz.
+    - **Targeting**: Select the Target Year and Target Branches for the quiz.
     - Add questions and save.
-    - Click "Publish" to make it live and send email alerts to students.
+    - Click "Publish" to make it live and send email alerts to **only the targeted students**.
 3.  **Student Flow**:
     - Log in as Student.
-    - See the list of published quizzes.
+    - See the list of published quizzes that match your Year and Branch.
     - Click "Take Quiz".
     - Submit to see your score.
 
@@ -114,5 +118,6 @@ npm start
 To test the email feature:
 1.  Ensure `SMTP` credentials are set in `backend/.env`.
 2.  Login as Faculty.
-3.  Publish a quiz.
-4.  Check the student's email inbox for the notification.
+3.  Create a quiz targeting a specific Year/Branch.
+4.  Publish the quiz.
+5.  Check the inbox of a student matching that Year/Branch. Other students will not receive the email.

@@ -39,8 +39,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(data.user));
   };
 
-  const signup = async (name, email, password, role) => {
-    const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/auth/signup`, { name, email, password, role });
+  const signup = async (name, email, password, role, year, branch) => {
+    const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/auth/signup`, { name, email, password, role, year, branch });
     setUser(data.user);
     localStorage.setItem('user', JSON.stringify(data.user));
   };

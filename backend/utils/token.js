@@ -12,12 +12,15 @@ function generateToken(user) {
 // Attach JWT in HttpOnly cookie
 function sendToken(res, user) {
   const token = generateToken(user);
-  res.cookie('token', token, {
+
+  res.cookie("token", token, {
     httpOnly: true,
-    // secure: true, // Uncomment in prod w/ HTTPS
+    secure: true,          // REQUIRED on Vercel + Render
+    sameSite: "none",      // REQUIRED for cross-domain cookies
     maxAge: 2 * 60 * 60 * 1000,
-    sameSite: 'lax',
+    path: "/"
   });
+
   return token;
 }
 
