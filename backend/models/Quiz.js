@@ -11,6 +11,8 @@ const quizSchema = new mongoose.Schema({
   description: { type: String },
   facultyId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   questions: [questionSchema],
+  targetYear: { type: Number, min: 1, max: 4 }, // Faculty selects one year
+  targetBranches: [{ type: String, enum: ['CSE', 'MNC', 'MAE', 'ECE'] }], // Faculty selects multiple branches
   status: { type: String, enum: ['draft', 'published'], default: 'draft' },
 }, { timestamps: true });
 

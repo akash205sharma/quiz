@@ -8,6 +8,8 @@ export default function CreateQuiz() {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [targetYear, setTargetYear] = useState(1);
+  const [targetBranches, setTargetBranches] = useState(['CSE', 'MNC', 'MAE', 'ECE']); // Default all
   const [questions, setQuestions] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [error, setError] = useState('');
@@ -19,16 +21,27 @@ export default function CreateQuiz() {
     setModalOpen(false);
   };
 
+  const handleBranchChange = (branch) => {
+    if (targetBranches.includes(branch)) {
+      setTargetBranches(targetBranches.filter(b => b !== branch));
+    } else {
+      setTargetBranches([...targetBranches, branch]);
+    }
+  };
+
   const submitQuiz = async (e) => {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!title || questions.length === 0) return setError('Quiz needs a title and at least one question.');
+    if (targetBranches.length === 0) return setError('Select at least one branch.');
     setLoading(true);
     try {
       const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/quizzes/create`, {
         title,
         description,
-        questions
+        questions,
+        targetYear,
+        targetBranches
       });
       setSuccess('Quiz created successfully!');
       // Redirect to faculty dashboard after 1.5 seconds
@@ -51,6 +64,25 @@ export default function CreateQuiz() {
         <div>
           <label className="block font-medium mb-1 text-gray-700">Description</label>
           <textarea value={description} onChange={e=>setDescription(e.target.value)} className="w-full px-4 py-2 border rounded-md"/>
+        </div>
+        <div className="flex gap-4">
+          <div className="w-1/3">
+            <label className="block font-medium mb-1 text-gray-700">Target Year</label>
+            <select value={targetYear} onChange={e=>setTargetYear(Number(e.target.value))} className="w-full px-4 py-2 border rounded-md">
+              {[1, 2, 3, 4].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+          <div className="w-2/3">
+            <label className="block font-medium mb-1 text-gray-700">Target Branches</label>
+            <div className="flex flex-wrap gap-2">
+              {['CSE', 'MNC', 'MAE', 'ECE'].map(b => (
+                <label key={b} className="flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" checked={targetBranches.includes(b)} onChange={()=>handleBranchChange(b)} />
+                  {b}
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
         <div>
           <span className="block font-medium mb-2 text-gray-700">Questions</span>

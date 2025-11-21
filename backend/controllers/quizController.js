@@ -6,13 +6,15 @@ const { sendQuizPublishedEmail } = require('../utils/emailService');
 // Create Quiz (faculty only)
 exports.createQuiz = async (req, res) => {
   try {
-    const { title, description, questions } = req.body;
+    const { title, description, questions, targetYear, targetBranches } = req.body;
     if (!title) return res.status(400).json({ message: 'Title required' });
     const quiz = new Quiz({
       title,
       description,
       facultyId: req.user.id,
-      questions: questions || [] // Accept questions array if provided
+      questions: questions || [], // Accept questions array if provided
+      targetYear,
+      targetBranches
     });
     await quiz.save();
     res.status(201).json({ quiz });
@@ -65,7 +67,11 @@ exports.publishQuiz = async (req, res) => {
 
     // Send email if status changed to published
     if (previousStatus !== 'published' && quiz.status === 'published') {
-      const students = await User.find({ role: 'student' });
+      const students = await User.find({
+        role: 'student',
+        year: quiz.targetYear,
+        branch: { $in: quiz.targetBranches }
+      });
       sendQuizPublishedEmail(students, quiz);
     }
 
@@ -82,7 +88,12 @@ exports.listQuizzes = async (req, res) => {
     if (req.user.role === 'faculty') {
       quizzes = await Quiz.find({ facultyId: req.user.id });
     } else {
-      quizzes = await Quiz.find({ status: 'published' });
+      // Student: only published quizzes matching their year and branch
+      quizzes = await Quiz.find({
+        status: 'published',
+        targetYear: req.user.year,
+        targetBranches: req.user.branch
+      });
     }
     res.json({ quizzes });
   } catch (err) {

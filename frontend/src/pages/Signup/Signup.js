@@ -7,6 +7,8 @@ export default function Signup() {
   const { signup } = useContext(AuthContext);
   const [name, setName] = useState("");
   const [role, setRole] = useState("student");
+  const [year, setYear] = useState(1);
+  const [branch, setBranch] = useState("CSE");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -18,7 +20,7 @@ export default function Signup() {
     setLoading(true); setErr("");
     if (password.length < 6) { setErr("Password too short."); setLoading(false); return; }
     try {
-      await signup(name, email, password, role);
+      await signup(name, email, password, role, role === 'student' ? year : undefined, role === 'student' ? branch : undefined);
       navigate("/dashboard");
     } catch {
       setErr("Signup failed. Use a different email?");
@@ -52,6 +54,22 @@ export default function Signup() {
             <option value="faculty">Faculty</option>
           </select>
         </div>
+        {role === 'student' && (
+          <>
+            <div>
+              <label className="block text-sm font-semibold mb-1 text-gray-700">Year</label>
+              <select value={year} onChange={e=>setYear(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg">
+                {[1, 2, 3, 4].map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1 text-gray-700">Branch</label>
+              <select value={branch} onChange={e=>setBranch(e.target.value)} className="w-full px-3 py-2 border rounded-lg">
+                {['CSE', 'MNC', 'MAE', 'ECE'].map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+          </>
+        )}
         <div>
           <label className="block text-sm font-semibold mb-1 text-gray-700">
             Email
